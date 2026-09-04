@@ -1,5 +1,11 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql" }
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
 model BusinessFunction {
   id String @id @default(cuid())
@@ -26,8 +32,39 @@ model Tool {
   createdAt DateTime @default(now())
 }
 
-model Tag { id String @id @default(cuid()); name String @unique; tools ToolTag[] }
-model ToolTag { toolId String; tagId String; tool Tool @relation(fields:[toolId],references:[id],onDelete:Cascade); tag Tag @relation(fields:[tagId],references:[id],onDelete:Cascade); @@id([toolId,tagId]) }
-model ToolSubmission { id String @id @default(cuid()); name String; website String; businessFunction String; description String; status SubmissionStatus @default(PENDING); createdAt DateTime @default(now()) }
-enum Pricing { FREE FREEMIUM PAID }
-enum SubmissionStatus { PENDING APPROVED REJECTED }
+model Tag {
+  id    String   @id @default(cuid())
+  name  String   @unique
+  tools ToolTag[]
+}
+
+model ToolTag {
+  toolId String
+  tagId  String
+  tool   Tool   @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([toolId, tagId])
+}
+
+model ToolSubmission {
+  id               String           @id @default(cuid())
+  name             String
+  website          String
+  businessFunction String
+  description      String
+  status           SubmissionStatus @default(PENDING)
+  createdAt        DateTime         @default(now())
+}
+
+enum Pricing {
+  FREE
+  FREEMIUM
+  PAID
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}

@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-
-type Submission = { id: string; name: string; website: string; function: string; description: string; status: "PENDING"; createdAt: string };
-const store = globalThis as unknown as { submissions?: Submission[] };
-const submissions = store.submissions ?? (store.submissions = []);
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  return NextResponse.json({ data: submissions });
+  const submissions = await prisma.toolSubmission.findMany({ orderBy: { createdAt: "desc" } });
+  return NextResponse.json({
+    data: submissions.map((submission) => ({ ...submission, function: submission.businessFunction })),
+  });
 }
 
 export async function POST(request: Request) {
@@ -15,7 +15,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "All fields are required." }, { status: 400 });
   }
   try { new URL(body.website); } catch { return NextResponse.json({ error: "A valid website URL is required." }, { status: 400 }); }
-  const item: Submission = { id: crypto.randomUUID(), name: body.name.trim(), website: body.website.trim(), function: body.function.trim(), description: body.description.trim(), status: "PENDING", createdAt: new Date().toISOString() };
-  submissions.unshift(item);
-  return NextResponse.json({ data: item }, { status: 201 });
+  const item = await prisma.toolSubmission.create({
+    data: {
+      name: body.name.trim(),
+      website: body.website.trim(),
+      businessFunction: body.function.trim(),
+      description: body.description.trim(),
+    },
+  });
+  return NextResponse.json({ data: { ...item, function: item.businessFunction } }, { status: 201 });
 }
