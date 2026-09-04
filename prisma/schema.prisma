@@ -1,0 +1,33 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql" }
+
+model BusinessFunction {
+  id String @id @default(cuid())
+  name String @unique
+  slug String @unique
+  adoptionRate Int
+  description String
+  tools Tool[]
+  createdAt DateTime @default(now())
+}
+
+model Tool {
+  id String @id @default(cuid())
+  name String @unique
+  slug String @unique
+  description String
+  website String
+  pricing Pricing @default(FREEMIUM)
+  hasApi Boolean @default(false)
+  isOpenSource Boolean @default(false)
+  businessFunctionId String
+  businessFunction BusinessFunction @relation(fields:[businessFunctionId],references:[id])
+  tags ToolTag[]
+  createdAt DateTime @default(now())
+}
+
+model Tag { id String @id @default(cuid()); name String @unique; tools ToolTag[] }
+model ToolTag { toolId String; tagId String; tool Tool @relation(fields:[toolId],references:[id],onDelete:Cascade); tag Tag @relation(fields:[tagId],references:[id],onDelete:Cascade); @@id([toolId,tagId]) }
+model ToolSubmission { id String @id @default(cuid()); name String; website String; businessFunction String; description String; status SubmissionStatus @default(PENDING); createdAt DateTime @default(now()) }
+enum Pricing { FREE FREEMIUM PAID }
+enum SubmissionStatus { PENDING APPROVED REJECTED }
