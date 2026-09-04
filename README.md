@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Orbit — Business AI directory
 
-## Getting Started
+AI Orbit is a Next.js 16 App Router directory for discovering business AI tools. The landing page keeps the curated visual experience, while tools, functions, and submissions are backed by Prisma when a database is available.
 
-First, run the development server:
+## Local setup
+
+Requirements: Node.js 20+ and a PostgreSQL database.
 
 ```bash
+npm install
+Copy-Item .env.example .env       # PowerShell; then set DATABASE_URL
+npm run db:validate
+npm run db:generate
+npm run db:push
+npm run db:seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Never commit `.env` or expose `DATABASE_URL`. The application validates the variable before opening Prisma.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Routes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `/` — AI Orbit directory and submission form
+- `/business/tools` — database-backed tool listing
+- `/business/tools/[slug]` — database-backed tool detail
+- `/business/functions` — database-backed business functions
+- `/business/functions/[slug]` — function detail with tools, resources, and examples
+- `/business/submit` — dedicated tool submission form
+- `/business/saved` — browser-local saved tool shortlist
+- `GET /api/tools`, `GET /api/tools/[slug]`
+- `GET /api/business-tools`, `GET /api/business-tools/[slug]`
+- `GET /api/business-tools/[slug]/related`
+- `GET /api/business-functions`
+- `GET|POST /api/submissions`
 
-## Learn More
+The compatibility directory accepts `q`, `function`, `tag`, `pricing` (`FREE`, `FREEMIUM`, or `PAID`), `api`, `openSource`, `page`, `pageSize` (1–100), and `sort` (`name`, `newest`, `featured`, or `adoption`). It returns `data` plus `pagination`. The legacy `/api/tools` route remains available and accepts `search` and `limit`. Submission payloads are validated with Zod.
 
-To learn more about Next.js, take a look at the following resources:
+Saved tools are intentionally browser-local because this demo does not have an authentication provider. A public admin moderation route and server-backed `User`/`Bookmark` models are deferred until auth and authorization are available; submissions remain persisted with review fields for that integration.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Production deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Set `DATABASE_URL` in the hosting provider's encrypted environment settings, then run:
 
-## Deploy on Vercel
+```bash
+npm ci
+npm run db:generate
+npm run db:push       # or use your reviewed Prisma migration workflow
+npm run build
+npm start
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For Vercel, configure the PostgreSQL/Neon connection string as a production environment variable and deploy from the repository. Review database backups, connection pooling, and migration approvals before promoting schema changes.

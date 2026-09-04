@@ -13,8 +13,16 @@ model BusinessFunction {
   slug String @unique
   adoptionRate Int
   description String
+  icon String @default("✦")
+  color String @default("#9b8cff")
   tools Tool[]
+  resources LearningResource[]
+  examples BusinessExample[]
+  useCases UseCase[]
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
 }
 
 model Tool {
@@ -22,14 +30,24 @@ model Tool {
   name String @unique
   slug String @unique
   description String
+  longDescription String?
   website String
+  logoUrl String?
   pricing Pricing @default(FREEMIUM)
   hasApi Boolean @default(false)
   isOpenSource Boolean @default(false)
+  status ToolStatus @default(ACTIVE)
+  featured Boolean @default(false)
   businessFunctionId String
   businessFunction BusinessFunction @relation(fields:[businessFunctionId],references:[id])
   tags ToolTag[]
+  examples BusinessExample[]
+  useCases UseCase[]
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessFunctionId])
+  @@index([pricing])
 }
 
 model Tag {
@@ -54,13 +72,75 @@ model ToolSubmission {
   businessFunction String
   description      String
   status           SubmissionStatus @default(PENDING)
+  reviewerNote     String?
+  reviewedAt       DateTime?
   createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model LearningResource {
+  id String @id @default(cuid())
+  title String
+  slug String @unique
+  description String
+  url String
+  type String @default("GUIDE")
+  featured Boolean @default(false)
+  businessFunctionId String?
+  businessFunction BusinessFunction? @relation(fields: [businessFunctionId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessFunctionId])
+  @@index([featured])
+}
+
+model BusinessExample {
+  id String @id @default(cuid())
+  title String
+  slug String @unique
+  summary String
+  details String?
+  useCase String?
+  businessFunctionId String
+  businessFunction BusinessFunction @relation(fields: [businessFunctionId], references: [id], onDelete: Cascade)
+  toolId String?
+  tool Tool? @relation(fields: [toolId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessFunctionId])
+  @@index([toolId])
+}
+
+model UseCase {
+  id String @id @default(cuid())
+  title String
+  slug String @unique
+  description String
+  businessFunctionId String?
+  businessFunction BusinessFunction? @relation(fields: [businessFunctionId], references: [id], onDelete: SetNull)
+  toolId String?
+  tool Tool? @relation(fields: [toolId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessFunctionId])
+  @@index([toolId])
 }
 
 enum Pricing {
   FREE
   FREEMIUM
   PAID
+}
+
+enum ToolStatus {
+  ACTIVE
+  PENDING
+  ARCHIVED
 }
 
 enum SubmissionStatus {
